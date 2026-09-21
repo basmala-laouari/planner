@@ -16,4 +16,6 @@ router.post('/complete-profile', verifyToken, authController.completeProfile);
 // Single-use: succeeds once, then the key is marked redeemed regardless of expiry.
 router.post('/redeem-admin-key', verifyToken, authController.redeemAdminKey);
 
+router.get('/me', requireAuth, authController.getMe);//MEMEMEMEMEMEMEMEMEMEMEMEMEMEMEMEMEMEMEMEMEMEMEMEMEMEMEMEMEMEMEMEEEEEEEEEEEEEEEEeeeeeeeeee
+
 export default router;

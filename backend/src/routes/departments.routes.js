@@ -4,7 +4,7 @@ import * as departmentsController from '../controllers/departments.controller.js
 
 const router = Router();
 
-router.get('/', requireAuth, departmentsController.listDepartments);
+router.get('/', departmentsController.listDepartments);
 
 // Superadmin only — matches the "superadmin creates departments" rule.
 router.post('/', requireAuth, requireRole('superadmin'), departmentsController.createDepartment);

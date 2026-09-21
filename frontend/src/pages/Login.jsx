@@ -1,8 +1,28 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { supabase } from "../lib/supabase";
+
 
 export default function Login() {
+
+
+ const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError(null);
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    if (signInError) {
+      setError(signInError.message);
+      return;
+    }
+    window.location.href = "/planner";
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center px-6">
       <div className="w-full max-w-md">
@@ -18,7 +38,7 @@ export default function Login() {
         </div>
 
         {/* Login Card */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl" >
           <h2 className="text-2xl font-semibold mb-2">
             Welcome back
           </h2>
@@ -27,7 +47,7 @@ export default function Login() {
             Sign in to access your planner.
           </p>
 
-          <form className="space-y-5">
+          <form className="space-y-5" onSubmit={handleSubmit}>
 
           
             <div>
@@ -37,6 +57,7 @@ export default function Login() {
 
               <input
                 type="email"
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="bruh@hello.there"
                 className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700
                            focus:outline-none focus:border-indigo-500 transition"
@@ -51,6 +72,7 @@ export default function Login() {
 
               <input
                 type="password"
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="fucking password"
                 className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700
                            focus:outline-none focus:border-indigo-500 transition"
@@ -60,12 +82,12 @@ export default function Login() {
             <button
               type="submit"
               className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500
-                         font-medium transition"
-                         onClick={() => {
-                          // Handle login logic here
-                          // For now, just redirect to the planner page
-                          window.location.href = "/planner";
-                        }}
+                        font-medium transition"
+                        //  onClick={() => {
+                        //   // Handle login logic here
+                        //   // For now, just redirect to the planner page
+                        //   window.location.href = "/planner";
+                        // }}
             >
               Login
             </button>

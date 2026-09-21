@@ -92,4 +92,8 @@ export async function redeemAdminKey(req, res) {
   res.status(200).json({ status: 'admin_approved' });
 }
 
+
+export async function getMe(req, res) {
+  res.status(200).json(req.user); // requireAuth already attached the profile row
+}
 //AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaa.....fuck

@@ -1,9 +1,65 @@
-
+import { useEffect } from 'react';
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { supabase } from '../lib/supabase';
+import { apiFetch } from '../lib/api';
 
 export default function Register() {
   const [role, setRole] = useState("student");
+  const [email, setEmail] = useState('');
+const [password, setPassword] = useState('');
+const [fullName, setFullName] = useState(''); 
+const [departmentId, setDepartmentId] = useState('');
+const [university, setUniversity] = useState('');
+const [universityId, setUniversityId] = useState('');
+const [error, setError] = useState(null);
+const [idDocument, setIdDocument] = useState(null);
+const [departments, setDepartments] = useState([]);
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+useEffect(() => {
+  apiFetch('/departments')
+    .then(setDepartments)
+    .catch((err) => setError(err.message));
+}, []);
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+async function handleSubmit(e) {
+  e.preventDefault();
+  setError(null);
+  try {
+    let session;
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
+
+    if (signUpError?.message?.includes('already registered')) {
+      // Likely an orphaned auth user from a previous failed complete-profile.
+      // Try signing in with the same credentials to recover the session.
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) throw signUpError; // truly someone else's account — surface the original error
+      session = signInData.session;
+    } else if (signUpError) {
+      throw signUpError;
+    } else {
+      session = signUpData.session;
+    }
+
+    await apiFetch('/auth/complete-profile', {
+      method: 'POST',
+      body: JSON.stringify({ fullName, role, departmentIds: [departmentId] }),
+    });
+
+    window.location.href = '/planner';
+  } catch (err) {
+    setError(err.message);
+  }
+}
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center px-6 py-10">
@@ -22,36 +78,24 @@ export default function Register() {
 
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl">
 
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleSubmit}>
 
        
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
+
+            <div>
                 <label className="block text-sm text-slate-300 mb-2">
-                  First name
+                  full name
                 </label>
 
                 <input
                   type="text"
-                  placeholder="First name"
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="full name"
                   className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700
                              focus:outline-none focus:border-indigo-500"
                 />
               </div>
-
-              <div>
-                <label className="block text-sm text-slate-300 mb-2">
-                  Last name
-                </label>
-
-                <input
-                  type="text"
-                  placeholder="Last name"
-                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700
-                             focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-            </div>
+            
 
            
             <div>
@@ -61,6 +105,7 @@ export default function Register() {
 
               <input
                 type="email"
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@university.edu"
                 className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700
                            focus:outline-none focus:border-indigo-500"
@@ -75,6 +120,7 @@ export default function Register() {
 
               <input
                 type="password"
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Create a password"
                 className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700
                            focus:outline-none focus:border-indigo-500"
@@ -104,7 +150,7 @@ export default function Register() {
                 University
               </label>
 
-              <select
+              <select onChange={(e) => setUniversity(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700
                            focus:outline-none focus:border-indigo-500"
               >
@@ -119,17 +165,13 @@ export default function Register() {
                 Department
               </label>
 
-              <select
-                className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700
-                           focus:outline-none focus:border-indigo-500"
-              >
-                <option>Select department</option>
-                <option>Computer Science</option>
-                <option>Mathematics</option>
-                <option>Physics</option>
-                <option>Biology</option>
-                <option>Chemistry</option>
-              </select>
+             <select onChange={(e) => setDepartmentId(e.target.value)}  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700
+                           focus:outline-none focus:border-indigo-500">
+  <option value="">Select department</option>
+  {departments.map((d) => (
+    <option key={d.id} value={d.id}>{d.name}</option>
+  ))}
+</select>
             </div>
 
             <div>
@@ -139,6 +181,7 @@ export default function Register() {
 
               <input
                 type="text"
+                onChange={(e) => setUniversityId(e.target.value)}
                 placeholder="Your university ID"
                 className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700
                            focus:outline-none focus:border-indigo-500"
@@ -151,20 +194,18 @@ export default function Register() {
                 <label className="block text-sm text-slate-300 mb-2">
                   Verification document
                 </label>
-
-                <div className="border border-dashed border-slate-700 rounded-xl p-6 text-center">
-                  <p className="text-slate-400 text-sm">
-                    Upload your {role === "student" ? "student ID" : "professor proof"}
-                  </p>
-
-                  <button
-                    type="button"
-                    className="mt-3 px-4 py-2 rounded-lg bg-slate-800
-                               hover:bg-slate-700 text-sm transition"
-                  >
-                    Choose file
-                  </button>
-                </div>
+<input
+  type="file"
+  id="idDocument"
+  className="hidden"
+  onChange={(e) => setIdDocument(e.target.files[0])}
+/>
+<label
+  htmlFor="idDocument"
+  className="mt-3 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm transition inline-block cursor-pointer"
+>
+  {idDocument ? idDocument.name : "Choose file"}
+</label>
               </div>
             )}
 
@@ -188,11 +229,11 @@ export default function Register() {
               type="submit"
               className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500
                          font-medium transition"
-                            onClick={() => {
-                          // Handle login logic here
-                          // For now, just redirect to the planner page
-                          window.location.href = "/planner";
-                        }}
+                        //     onClick={() => {
+                        //   // Handle login logic here
+                        //   // For now, just redirect to the planner page
+                        //   window.location.href = "/planner";
+                        // }}
             >
               Create account
             </button>
