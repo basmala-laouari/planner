@@ -11,11 +11,14 @@ export default function Login() {
  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+    setLoading(true);
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
     if (signInError) {
       setError(signInError.message);
       return;
@@ -46,6 +49,12 @@ export default function Login() {
           <p className="text-slate-400 mb-8">
             Sign in to access your planner.
           </p>
+          {error && (
+  <p className="text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-4 py-2 mb-4">
+    {error}
+  </p>
+)}
+
 
           <form className="space-y-5" onSubmit={handleSubmit}>
 
@@ -81,15 +90,12 @@ export default function Login() {
 
             <button
               type="submit"
+              disabled={loading || !email || !password}
               className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500
-                        font-medium transition"
-                        //  onClick={() => {
-                        //   // Handle login logic here
-                        //   // For now, just redirect to the planner page
-                        //   window.location.href = "/planner";
-                        // }}
+                        font-medium transition disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-indigo-600"
+                       
             >
-              Login
+              {loading ? "Signing in..." : "Login"}
             </button>
           </form>
 
